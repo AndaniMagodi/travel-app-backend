@@ -7,10 +7,10 @@
 // dependency rather than built against a broken endpoint. See build-log.md.
 
 const MOCK_CARS = [
-    { id: "car-1", make: "Toyota", model: "Corolla", type: "Sedan", pricePerDay: 450, currency: "ZAR" },
-    { id: "car-2", make: "VW", model: "Polo", type: "Hatchback", pricePerDay: 380, currency: "ZAR" },
-    { id: "car-3", make: "Toyota", model: "Fortuner", type: "SUV", pricePerDay: 950, currency: "ZAR" },
-    { id: "car-4", make: "Hyundai", model: "H1", type: "Van", pricePerDay: 1100, currency: "ZAR" },
+    { id: "car-1", make: "Toyota", model: "Corolla", type: "Sedan", pricePerDay: 450, currency: "ZAR", seats: 5, bags: 2, transmission: "Auto" },
+    { id: "car-2", make: "VW", model: "Polo", type: "Hatchback", pricePerDay: 380, currency: "ZAR", seats: 5, bags: 1, transmission: "Manual" },
+    { id: "car-3", make: "Toyota", model: "Fortuner", type: "SUV", pricePerDay: 950, currency: "ZAR", seats: 7, bags: 4, transmission: "Auto" },
+    { id: "car-4", make: "Hyundai", model: "H1", type: "Van", pricePerDay: 1100, currency: "ZAR", seats: 9, bags: 6, transmission: "Auto" },
   ];
   
   async function resolveLocation(query) {
