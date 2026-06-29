@@ -1,8 +1,8 @@
-# Travel Planner — Frontend
+# Travel Planner — Backend
 
-Vue 3 single-page app for the Travel Planner. Takes a destination city and
-travel dates, and renders weather, hotels, flights, car rentals, and
-attractions for that trip in one consolidated view.
+Express API that aggregates weather, hotel, flight, and car rental data from
+multiple third-party providers for a given destination city and travel
+dates, and persists every search to MongoDB.
 
 ## Setup
 
@@ -12,64 +12,53 @@ Install dependencies:
 
 Create a `.env` file in this folder with:
 
-    VITE_API_URL=http://localhost:4000
+    RAPIDAPI_KEY=your_rapidapi_key
+    PORT=4000
+    MONGODB_URI=your_mongodb_atlas_connection_string
 
-Run the dev server:
+Run the server:
 
-    npm run dev
+    node server.js
 
-The backend (see the sibling `travel-app-backend` repo) must be running
-separately for searches to return real data.
+The frontend (see the sibling `travel-app-frontend` repo) expects this
+running on `http://localhost:4000`.
 
-## Structure
+## Architecture
 
-- TripSearch.vue — the search form (city, check-in, check-out)
-- SearchHistory.vue — recent searches, reloads a past result instantly from
-  the backend's saved history with zero new API calls
-- SkeletonLoader.vue — loading state shown while a live search is in flight
-- TripSummary.vue — estimated trip cost, built from the cheapest item in
-  each category already present in the response (no extra API calls)
-- WeatherCard.vue, HotelCard.vue, FlightCard.vue, CarRentalCard.vue,
-  AttractionCard.vue — one component per result category
-- HotelMap.vue — Leaflet/OpenStreetMap view of hotel locations, embedded
-  inside HotelCard
+A single endpoint, `/api/trip`, runs four providers concurrently:
 
-## Design notes
+- `providers/weather.js` — Open-Meteo (free, no key required)
+- `providers/hotels.js` — Booking.com via RapidAPI
+- `providers/flights.js` — Booking.com via RapidAPI
+- `providers/carRental.js` — Sky-Scrapper via RapidAPI
 
-Hotel, flight, and attraction "Book" links point to each provider's public
-search results page (Booking.com), pre-filled with the relevant city/dates —
-not a deep link to the exact priced offer, since that requires a more
-involved booking-flow integration the providers don't expose simply. Car
-rental is the exception: Expedia's API returns a real per-offer booking URL,
-so those links go straight to the specific listed car.
+Each provider exports the same two-function interface — `resolveLocation(query)`
+and `search(location, params)` — so `orchestrator.js` can drive all four
+through identical generic logic without knowing which provider it's calling.
 
-Flight, hotel, and car rental cards share the same filter/sort/pagination
-pattern (a left-hand filter sidebar, a sort or filter checklist derived from
-the actual results already in memory, and a "Show more results" button) —
-deliberately reused across all three rather than three different
-implementations.
-
-## Known limitations
-
-- No cross-highlighting between the hotel map and hotel cards yet (clicking
-  a card doesn't highlight its map pin, or vice versa) — a natural next
-  step, not built due to time constraints.
-- The trip cost summary estimates from the *cheapest* item per category,
-  not a specific selected itinerary — clearly labeled as an estimate in the UI.
+Each provider task is wrapped individually so a failure in one (e.g. a
+captcha block or rate limit) never blocks or crashes the other three —
+the response always returns whatever succeeded, with per-category
+`status: 'ok' | 'error'`.
 
 ## Persistence (MongoDB)
 
-Every search is saved to MongoDB via Mongoose (`models/SearchHistory.js`),
-including the full result payload for all five categories. This powers two
-things:
+Every search is saved via Mongoose (`models/SearchHistory.js`), including
+the full result payload across all four categories. This powers:
 
-- `/api/history` — a lightweight list of the most recent searches (city +
-  dates only, results excluded) for the "Recent Searches" UI
-- `/api/history/:id` — the full saved result for one past search, used to
-  instantly reload a previous search with zero new API calls — useful both
-  for the user revisiting a trip, and for safely demoing without spending
-  RapidAPI quota on repeat searches
+- `GET /api/history` — recent searches (city + dates only, no results) for
+  a "Recent Searches" UI
+- `GET /api/history/:id` — the full saved result for one past search, used
+  to instantly reload a previous search with zero new API calls
 
-The save happens "fire and forget" after the response is already prepared —
-a MongoDB failure never blocks or delays the actual `/api/trip` response,
+The save happens "fire and forget" after the response is already built —
+a MongoDB failure never blocks or delays the `/api/trip` response itself,
 it's only logged.
+
+## Known limitations
+
+- Car rental real-API integration (Sky-Scrapper) is occasionally blocked by
+  the provider's own bot protection (PerimeterX) — confirmed via direct
+  testing on RapidAPI's own console, not specific to this code.
+- No request caching beyond MongoDB history — a repeat search with
+  identical params still calls all four providers fresh.
