@@ -16,6 +16,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get("/", (_req, res) => {
+  res.json({
+    name: "Travel Planner API",
+    status: "ok",
+    health: "/health",
+  });
+});
+
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok" });
+});
+
 connectDB();
 
 // One endpoint that runs all five providers in parallel and returns
