@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const mongoose = require("mongoose");
 
 const connectDB = require("./db");
 const SearchHistory = require("./models/SearchHistory");
@@ -13,7 +14,11 @@ const { getUsdToZarRate } = require("./providers/exchangeRate");
 const attractionProvider = require("./providers/attractions");
 
 const app = express();
-app.use(cors());
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+].filter(Boolean);
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 app.get("/", (_req, res) => {
@@ -29,6 +34,14 @@ app.get("/health", (_req, res) => {
 });
 
 connectDB();
+
+// Used by the hosting platform to confirm the API and its database are ready.
+app.get("/health", (_req, res) => {
+  const databaseReady = mongoose.connection.readyState === 1;
+  res
+    .status(databaseReady ? 200 : 503)
+    .json({ status: databaseReady ? "ok" : "unavailable" });
+});
 
 // One endpoint that runs all five providers in parallel and returns
 // whatever succeeded — a failure in one category doesn't block the others.

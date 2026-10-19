@@ -27,6 +27,17 @@ Run the server:
 The frontend (see the sibling `travel-app-frontend` repo) expects this
 running on `http://localhost:4000`.
 
+## Deploy to Render
+
+The repository includes a Render Blueprint in `render.yaml`. Connect this
+GitHub repository in Render and create a Blueprint from that file. Set the
+`MONGODB_URI` and `RAPIDAPI_KEY` secrets when prompted; keep both values in
+Render's environment settings, not in Git. The Blueprint configures
+`FRONTEND_URL` and uses `/health` to check that the API and MongoDB are ready.
+
+The free web service sleeps after 15 minutes without traffic. The first request
+after that can take about a minute to wake the API.
+
 ## Architecture
 
 A single endpoint, `/api/trip`, runs five providers concurrently:
