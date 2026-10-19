@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: andani-travel-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_URL
+        value: https://travel-app-frontend-beryl.vercel.app
+      - key: MONGODB_URI
+        sync: false
+      - key: RAPIDAPI_KEY
+        sync: false
