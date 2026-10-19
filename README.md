@@ -3,6 +3,7 @@
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Open%20App-00C7B7?logo=vercel&logoColor=white)](https://travel-app-frontend-beryl.vercel.app/)
 
 [Live demo](https://travel-app-frontend-beryl.vercel.app/) · [Frontend repository](https://github.com/AndaniMagodi/travel-app-frontend)
+API: https://andani-travel-api.onrender.com · [Health](https://andani-travel-api.onrender.com/health)
 
 Express API that aggregates weather, hotel, flight, and car rental data from
 multiple third-party providers for a given destination city and travel
